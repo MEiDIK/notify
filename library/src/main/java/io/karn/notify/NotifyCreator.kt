@@ -142,10 +142,10 @@ class NotifyCreator internal constructor(private val notify: Notify) {
         (this.stackable as Payload.Stackable).init()
 
         this.stackable
-                ?.takeIf { it.key.isNullOrEmpty() }
-                ?.apply {
-                    throw IllegalArgumentException(Errors.INVALID_STACK_KEY_ERROR)
-                }
+            ?.takeIf { it.key.isNullOrEmpty() }
+            ?.apply {
+                throw IllegalArgumentException(Errors.INVALID_STACK_KEY_ERROR)
+            }
 
         return this
     }
@@ -167,11 +167,16 @@ class NotifyCreator internal constructor(private val notify: Notify) {
      * @param id    An optional integer which will be used as the ID for the notification that is
      *              shown. This argument is ignored if the notification is a NotifyCreator#stackable
      *              receiver is set.
+     * @param beforeShowing Optional. Scoped function for modifying the detail of notification builder before launch.
      * @return An integer corresponding to the ID of the system notification. Any updates should use
      * this returned integer to make updates or to cancel the notification.
      */
-    fun show(id: Int? = null): Int {
-        return notify.show(id, asBuilder())
+    fun show(id: Int? = null, beforeShowing: (NotificationCompat.Builder.() -> Unit)? = null): Int {
+        val builder = asBuilder()
+        beforeShowing?.let {
+            builder.it()
+        }
+        return notify.show(id, builder)
     }
 
     /**
@@ -180,8 +185,10 @@ class NotifyCreator internal constructor(private val notify: Notify) {
      * @deprecated Choose to instead use the static function {@see Notify#cancelNotification()}
      * which provides the correct encapsulation of the this `cancel` function.
      */
-    @Deprecated(message = "Exposes function under the incorrect API -- NotifyCreator is reserved strictly for notification construction.",
-            replaceWith = ReplaceWith("Notify.cancelNotification(id)", "io.karn.notify.Notify"))
+    @Deprecated(
+        message = "Exposes function under the incorrect API -- NotifyCreator is reserved strictly for notification construction.",
+        replaceWith = ReplaceWith("Notify.cancelNotification(id)", "io.karn.notify.Notify")
+    )
     fun cancel(id: Int) {
         return Notify.cancelNotification(id)
     }
